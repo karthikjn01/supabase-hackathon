@@ -15,23 +15,26 @@ datasource db {
 }
 
 model Profiles {
-  id          String   @id @default(cuid())
-  displayName String?  @map("display_name")
-  email       String   @unique
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @default(now()) @updatedAt
+  id          String      @id @default(cuid())
+  displayName String?     @map("display_name")
+  email       String      @unique
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @default(now()) @updatedAt
   Votes       Votes[]
+  Questions   Questions[]
 }
 
 model Questions {
-  id        String     @id @default(cuid())
-  question  String
-  views     Int        @default(0) // maybe to be implemented not sure yet.
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @default(now()) @updatedAt
-  Answers   Answers[] //two
-  Comments  Comments[]
-  Votes     Votes[]
+  id          String     @id @default(cuid())
+  question    String
+  views       Int        @default(0) // maybe to be implemented not sure yet.
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @default(now()) @updatedAt
+  createdById String
+  createdBy   Profiles   @relation(fields: [createdById], references: [id])
+  Answers     Answers[] //two
+  Comments    Comments[]
+  Votes       Votes[]
 }
 
 model Answers {
@@ -55,6 +58,8 @@ model Votes {
   answer     Answers   @relation(fields: [answerId], references: [id])
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @default(now()) @updatedAt
+
+  @@unique([userId, questionId])
 }
 
 model Comments {

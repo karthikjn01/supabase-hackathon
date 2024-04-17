@@ -1,4 +1,4 @@
-import { createServerClient, type CookieOptions } from "@supabase/ssr";
+import { type CookieOptions, createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
 export const createClient = () => {
@@ -33,4 +33,22 @@ export const createClient = () => {
       },
     },
   );
+};
+
+export const getUser = async () => {
+  const {
+    auth,
+  } = await createClient();
+
+  const {
+    data: {
+      user,
+    },
+    error,
+  } = await auth.getUser();
+
+  return {
+    user,
+    error,
+  };
 };
