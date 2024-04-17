@@ -7,32 +7,81 @@ import { redirect } from "next/navigation";
 export const getQuestions = async ({
   page = 0,
   take = 10,
+  sortBy = "Popular",
 }: {
+  sortBy?: "Popular" | "Newest";
   page?: number;
   take?: number;
 }) => {
   const { user, error } = await getUser();
 
-  let query = prisma.questions.findMany({
-    take,
+  const cappedTake = Math.min(take, 10);
+
+  let queryOrderByVotes = prisma.questions.findMany({
+    take: cappedTake,
+    skip: page * take,
+    orderBy: [
+      {
+        Votes: {
+          _count: "desc",
+        },
+      },
+      {
+        createdAt: "desc",
+      },
+    ],
+    include: {
+      Answers: true,
+      createdBy: true,
+    },
+  });
+
+  let queryOrderByNewest = prisma.questions.findMany({
+    take: cappedTake,
     skip: page * take,
     orderBy: {
       createdAt: "desc",
     },
     include: {
       Answers: true,
+      createdBy: true,
     },
   });
 
   if (!!(user?.id)) {
-    query = prisma.questions.findMany({
-      take,
+    queryOrderByNewest = prisma.questions.findMany({
+      take: cappedTake,
       skip: page * take,
       orderBy: {
         createdAt: "desc",
       },
       include: {
         Answers: true,
+        createdBy: true,
+        Votes: {
+          where: {
+            userId: user.id,
+          },
+        },
+      },
+    });
+
+    queryOrderByVotes = prisma.questions.findMany({
+      take: cappedTake,
+      skip: page * take,
+      orderBy: [
+        {
+          Votes: {
+            _count: "desc",
+          },
+        },
+        {
+          createdAt: "desc",
+        },
+      ],
+      include: {
+        Answers: true,
+        createdBy: true,
         Votes: {
           where: {
             userId: user.id,
@@ -43,11 +92,25 @@ export const getQuestions = async ({
   }
 
   const [data, total] = await Promise.all([
-    await query,
+    await sortBy === "Popular" ? queryOrderByVotes : queryOrderByNewest,
     await prisma.questions.count(),
   ]);
 
+  const voteCounts = new Map<string, number>();
+  await Promise.all(data.map(async (question) => {
+    await Promise.all(question.Answers.map(async (answer) => {
+      const count = await prisma.votes.count({
+        where: {
+          answerId: answer.id,
+        },
+      });
+
+      voteCounts.set(answer.id, count);
+    }));
+  }));
+
   return {
+    voteCounts,
     data,
     success: true,
     totalQuestions: total,
@@ -65,6 +128,7 @@ export const loadQuestion = async (questionId: string) => {
       createdAt: "desc",
     },
     include: {
+      createdBy: true,
       Answers: true,
     },
   });
@@ -78,6 +142,7 @@ export const loadQuestion = async (questionId: string) => {
         createdAt: "desc",
       },
       include: {
+        createdBy: true,
         Answers: true,
         Votes: {
           where: {
@@ -89,7 +154,29 @@ export const loadQuestion = async (questionId: string) => {
   }
 
   const data = await query;
-  return data;
+
+  if (!data) {
+    return null;
+  }
+
+  const answerCounts = new Map<string, number>();
+
+  await Promise.all(
+    data?.Answers.map(async (answer) => {
+      const count = await prisma.votes.count({
+        where: {
+          answerId: answer.id,
+        },
+      });
+
+      answerCounts.set(answer.id, count);
+    }) ?? [],
+  );
+
+  return {
+    data,
+    answerCounts,
+  };
 };
 
 export const newQuestion = async (formData: FormData) => {
@@ -136,4 +223,62 @@ export const newQuestion = async (formData: FormData) => {
   }
 
   return redirect("/");
+};
+
+export const deleteQuestion = async (questionId: string) => {
+  const { user, error } = await getUser();
+
+  if (error || !user) {
+    redirect("/login");
+  }
+
+  const votes = await prisma.votes.deleteMany({
+    where: {
+      question: {
+        id: questionId,
+        createdById: user.id,
+      },
+    },
+  });
+
+  if (!votes) {
+    console.log("Failed to delete votes");
+    return {
+      success: false,
+    };
+  }
+
+  const answers = await prisma.answers.deleteMany({
+    where: {
+      question: {
+        id: questionId,
+        createdById: user.id,
+      },
+    },
+  });
+
+  if (!answers) {
+    console.log("Failed to delete answers");
+    return {
+      success: false,
+    };
+  }
+
+  const question = await prisma.questions.delete({
+    where: {
+      id: questionId,
+      createdById: user.id,
+    },
+  }).catch(() => null);
+
+  if (!question) {
+    console.log("Failed to delete question");
+    return {
+      success: false,
+    };
+  }
+
+  return {
+    success: true,
+  };
 };

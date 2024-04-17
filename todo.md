@@ -1,0 +1,11 @@
+- [x] Created By {Name of User}
+- [x] Count votes for and against
+- [x] Delete Votes
+- [x] Delete Question
+- [x] Sort by most recent/most popular
+- [ ] Add a button to switch between sorting methods
+- [ ] Change username
+- [ ] Add a comment
+- [ ] Delete a comment
+- [ ] Edit a comment
+- [ ] Upvote comment (if there's time)

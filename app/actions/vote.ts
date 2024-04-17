@@ -37,3 +37,26 @@ export const vote = async (questionId: string, answerId: string) => {
     success: true,
   };
 };
+
+export const deleteVote = async (questionId: string, answerId: string) => {
+  const { user, error } = await getUser();
+
+  if (error || !user) {
+    return redirect("/login");
+  }
+
+  const { id: userId } = user;
+
+  const deletedVotes = await prisma.votes.delete({
+    where: {
+      userId_questionId: {
+        userId,
+        questionId,
+      },
+    },
+  });
+
+  return {
+    success: !!deletedVotes,
+  };
+};
