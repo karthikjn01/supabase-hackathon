@@ -22,6 +22,7 @@ model Profiles {
   updatedAt   DateTime    @default(now()) @updatedAt
   Votes       Votes[]
   Questions   Questions[]
+  Comments    Comments[]
 }
 
 model Questions {
@@ -69,6 +70,8 @@ model Comments {
   answer     Answers   @relation(fields: [answerId], references: [id])
   questionId String
   question   Questions @relation(fields: [questionId], references: [id])
+  userId     String
+  user       Profiles  @relation(fields: [userId], references: [id])
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @default(now()) @updatedAt
 }

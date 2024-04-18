@@ -2,6 +2,7 @@
 
 import prisma from "@/db";
 import { createClient, getUser } from "@/utils/supabase/server";
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 export const getQuestions = async ({
@@ -222,6 +223,9 @@ export const newQuestion = async (formData: FormData) => {
     );
   }
 
+  revalidatePath("/popular");
+  revalidatePath("/newest");
+
   return redirect("/");
 };
 
@@ -277,6 +281,10 @@ export const deleteQuestion = async (questionId: string) => {
       success: false,
     };
   }
+
+  revalidatePath("/newest");
+  revalidatePath("/popular");
+  revalidatePath(`/question/${questionId}`);
 
   return {
     success: true,

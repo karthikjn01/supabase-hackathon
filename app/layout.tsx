@@ -24,13 +24,20 @@ export default function RootLayout({
       <body className="bg-background text-foreground">
         <main className="min-h-screen flex flex-col items-center gap-10">
           <nav className="w-full flex justify-center border-b border-b-foreground/10 h-16">
-            <div className="container flex justify-end items-center p-3 text-sm gap-3">
-              <AuthButton />
-              <Button asChild>
-                <Link href={'/new'}>
-                  New Question
+            <div className="container flex justify-between items-center p-3 text-sm gap-3">
+              <Button variant={'ghost'} asChild>
+                <Link href={'/'}>
+                  Home
                 </Link>
               </Button>
+              <div className="flex flex-row gap-2">
+                <AuthButton />
+                <Button asChild>
+                  <Link href={'/new'}>
+                    New Question
+                  </Link>
+                </Button>
+              </div>
             </div>
           </nav>
           {children}

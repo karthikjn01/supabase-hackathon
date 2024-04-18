@@ -1,3 +1,5 @@
+'use client';
+
 import { Card } from "@/components/ui/card";
 import { QuestionType } from "./QuestionListRenderer";
 import { Button } from "@/components/ui/button";
@@ -5,6 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { useEffect, useState, useTransition } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { UserResponse } from "@supabase/supabase-js";
+import { useRouter } from "next/navigation";
 
 export default function QuestionCard({
     question,
@@ -13,6 +16,7 @@ export default function QuestionCard({
     deleteVote,
     deleteQuestion,
     userId,
+    showViewButton = true,
 }: {
     question: QuestionType,
     handleVote: (questionId: string, answerId: string) => Promise<void>,
@@ -20,6 +24,7 @@ export default function QuestionCard({
     deleteVote: (questionId: string, answerId: string) => Promise<void>,
     deleteQuestion: (questionId: string) => Promise<void>,
     userId: string | undefined,
+    showViewButton?: boolean,
 }) {
 
     let totalVotes = 0;
@@ -37,6 +42,7 @@ export default function QuestionCard({
 
     const [voteLoading, useVoteLoading] = useTransition();
     const [deleteVoteLoading, useDeleteVoteLoading] = useTransition();
+    const router = useRouter();
 
 
     return <Card className="p-5 w-full gap-6 flex flex-col">
@@ -46,15 +52,22 @@ export default function QuestionCard({
                     question.question
                 }
             </h1>
-            {(userId === question.createdById) && <Button
-                variant={'destructive'}
-                onClick={() => {
-                    deleteQuestion(
-                        question.id
-                    );
+            <div className="flex flex-row gap-2">
+                {showViewButton && <Button variant={"outline"} onClick={() => {
+                    router.push(`/question/${question.id}`);
                 }}>
-                Delete
-            </Button>}
+                    View
+                </Button>}
+                {(userId === question.createdById) && <Button
+                    variant={'destructive'}
+                    onClick={() => {
+                        deleteQuestion(
+                            question.id
+                        );
+                    }}>
+                    Delete
+                </Button>}
+            </div>
         </div>
         <div className="flex flex-row items-center justify-stretch gap-4">
             {

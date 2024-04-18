@@ -2,6 +2,7 @@
 
 import prisma from "@/db";
 import { getUser } from "@/utils/supabase/server";
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 export const vote = async (questionId: string, answerId: string) => {
@@ -32,6 +33,10 @@ export const vote = async (questionId: string, answerId: string) => {
     },
   });
 
+  revalidatePath("/newest");
+  revalidatePath("/popular");
+  revalidatePath(`/question/${questionId}`);
+
   return {
     vote,
     success: true,
@@ -55,6 +60,10 @@ export const deleteVote = async (questionId: string, answerId: string) => {
       },
     },
   });
+
+  revalidatePath("/newest");
+  revalidatePath("/popular");
+  revalidatePath(`/question/${questionId}`);
 
   return {
     success: !!deletedVotes,

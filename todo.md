@@ -3,9 +3,9 @@
 - [x] Delete Votes
 - [x] Delete Question
 - [x] Sort by most recent/most popular
-- [ ] Add a button to switch between sorting methods
-- [ ] Change username
-- [ ] Add a comment
-- [ ] Delete a comment
-- [ ] Edit a comment
+- [x] Add a button to switch between sorting methods
+- [x] Change username
+- [x] Add a comment
+- [x] Delete a comment
+- [x] Edit a comment
 - [ ] Upvote comment (if there's time)
